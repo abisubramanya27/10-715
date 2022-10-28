@@ -1,0 +1,88 @@
+\section{Soft Support Vector Machine Theory [40 points]}
+\label{prb:hw2::prob1}
+
+Consider the primal problem for the soft support vector machine (soft SVM).  Where $y_i \in \{-1,1\}$ are the labels, $\mathbf{x}_i \in \mathbb{R}^p$, $i=1,\ldots,n$ are the features (features already include the bias term), $\xi_{i} \in \mathbb{R}^{+}$ are the slack variables.
+
+\begin{equation}
+\label{soft_svm}
+\begin{aligned}
+& \underset{\mathbf{w}, \xi_i}{\text{minimize}} && \frac{1}{2}||\mathbf{w}||_2^2 + C\sum_{i=1}^n\xi_i\\
+& \text{subject to} && y_i(\mathbf{w}^T\mathbf{x}_i) \geq 1-\xi_i & i = 1,\ldots, n\\
+& && \xi_i \geq 0 & i = 1,\ldots, n
+\end{aligned}
+\end{equation}
+
+\begin{itemize}[(a)]
+    \item (25 points) Show that the soft SVM problem can be written as a regularized Hinge Loss problem:
+\end{itemize}
+\begin{equation}
+\label{regularized_hinge_loss}
+\underset{\mathbf{w}}{\text{minimize}} \;\; \frac{1}{2}||\mathbf{w}||_2^2 + C \sum_{i=1}^n \max\left(0, 1 - y_{i} (\mathbf{w}^T\mathbf{x}_i) \right)
+\end{equation}
+
+\begin{itemize}[(b)]
+\label{subgradient}
+    \item (15 points) Find an expression for the subgradient of the regularized Hinge Loss problem from equation (\ref{regularized_hinge_loss}).
+\end{itemize}
+
+
+\newpage
+\section{Implementation of the Soft SVM [60 points]}
+\label{prb:hw2::prob2}
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwIn{Number of steps $T$, learning rate $\alpha$}
+Initialize parameter $\mathbf{w}_{0}=0$ (weights which already implicitly include the bias)
+
+ \For{$t \; \in \; 0,\dots, T-1$}{
+   Compute the subgradient $\nabla f(\textbf{w}_{t})$ according to (1.b).
+   
+   Update the parameters $\textbf{w}_{t+1}=\textbf{w}_{t}- \alpha \nabla f(\textbf{w}_{t})$\;
+ }
+ \caption{Gradient Descent}
+\end{algorithm}
+
+\begin{enumerate}[(a)]
+
+\item (5 points) Complete the code of the Soft SVM Loss method. This method computes the regularized Hinge Loss shown in questions (1.a) using all examples. The Hinge Loss term is \textbf{summed} across examples, not averaged. Expected input and output sizes are given in code comments.
+
+\item (10 points) Complete the code of the subgradient method. This method computes the subgradient of the \textbf{regularized} hinge loss problem---the quantity that you derived in question (1.b)---using all examples. Expected input and output sizes are given in code comments.
+
+\item (5 points) Complete the code of the predict method, which predicts labels in $\{-1,1\}$ for all examples. Expected input and output sizes are given in code comments.
+
+\item (15 points) Complete the train method of the soft SVM using the gradient descent algorithm. Expected input sizes are given in code comments.
+
+\item 
+
+Train your soft SVM classifiers on the data from \textcolor{blue}{data.py}. You can use get\_data to get the data. Notably, this function will automatically append a constant 1 to the start of each $x_i$,  allowing for the inclusion of the bias in the weight vector.
+
+
+Report the following in your pdf for each of  \textcolor{blue}{C=0.1,  C=1, C=50} (keep random\_seed at 1, use 10,000 training iterations, and learning rate 1e-5):
+
+\begin{enumerate}[(i)]
+\item (5 points) Final train and test losses.
+
+\item (5 points) Final train and test accuracies.
+
+\item (10 points) After training, randomly sample without replacement 10\% of all \textbf{training} data points and plot them in a 2D scatterplot, using colors and/or shapes to distinguish between:
+
+\begin{itemize}
+    \item Examples with label +1 which \textit{are not} support vectors.
+    \item Examples with label +1 which \textit{are} support vectors.
+    \item Examples with label -1 which \textit{are not} support vectors.
+    \item Examples with label -1 which \textit{are} support vectors.
+\end{itemize}
+
+Provide a legend to describe which type of point is which.
+
+Also plot the final learned decision boundary.
+
+\textbf{NOTE: } Keep in mind that you should plot the 2 actual dimensions of each datapoint, and exclude the constant 1 attached for convenience in the prepare\_data function in data.py.
+
+\end{enumerate}
+
+
+\item (5 points) Which C gives the least number of support vectors in the sampled subset? Why do you think this is? Explain in 1-2 sentences (you don't need to rigorously prove it).
+
+\end{enumerate}
