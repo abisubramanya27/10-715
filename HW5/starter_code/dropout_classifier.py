@@ -5,6 +5,8 @@ import torch as t
 from torch import nn
 from torch import optim
 from torch.nn import functional as F
+import matplotlib.pyplot as plt
+import pickle
 
 from data import prepare_cifar_data, get_dataloader
 
@@ -105,17 +107,27 @@ class DropoutClassifier(object):
     def _initialize_network(self):
     	# TODO: complete this function
         # Input
-        input_layer = []  #TODO: Write the input_layer using torch modules
+        input_layer = [
+            nn.Linear(params['in_features'], params['hidden_layers'][0]),
+            self.activations[self.params['input_activation']],
+            nn.Dropout(self.params['input_dropout_prob'])
+        ]  #TODO: Write the input_layer using torch modules - Done
         # Hidden
         hidden_layers = []
         in_features = self.params['hidden_layers'][0]
         for layer, out_features in enumerate(self.params['hidden_layers'][1:]):
-            layer = []   # TODO: Write the hidden_layers using torch modules
+            layer = [
+                nn.Linear(in_features, out_features),
+                self.activations[self.params['hidden_activation']],
+                nn.Dropout(self.params['hidden_dropout_prob'])
+            ]   # TODO: Write the hidden_layers using torch modules - Done
             in_features = out_features   # This helps to define input and outputs of layers
             hidden_layers += layer
         
         # Output
-        output_layer = []  #TODO: Write the output_layer using torch modules
+        output_layer = [
+            nn.Linear(in_features, self.params['out_features'])
+        ]  #TODO: Write the output_layer using torch modules - Done
         
         layers = {'input_layer': input_layer,
                   'hidden_layers': hidden_layers,
@@ -143,12 +155,24 @@ class DropoutClassifier(object):
 
     def evaluate_cross_entropy(self, dataloader):
         self.model.eval()
+        loss_func = nn.CrossEntropyLoss()        
         with t.no_grad():
+            n_samples = 0
+            total_loss = 0
             for batch in iter(dataloader):
-                pass
                 # TODO: Write the code to measure the cross_entropy 
                 # (Hint, look at the evaluate_accuracy method)
-                # Be careful with the eval and train modes of the model
+                # Be careful with the eval and train modes of the model - Done
+                batch_x = t.flatten(batch[0].to(self.device), start_dim=1)
+                batch_y = batch[1].to(self.device)
+                
+                logits = self.model(batch_x)
+                loss = loss_func(logits, batch_y) 
+                
+                total_loss += loss.item() * len(batch_x)
+                n_samples += len(batch_x)
+        
+        cross_entropy = total_loss/n_samples
         self.model.train()
         return cross_entropy
     
@@ -217,8 +241,11 @@ class DropoutClassifier(object):
                 
                 optimizer.zero_grad()
 
-                # TODO: make predictions, compute the cross entropy loss and perform backward propagation
-                logits = None
+                # TODO: make predictions, compute the cross entropy loss and perform backward propagation - Done
+                logits = self.model(batch_x)
+                cross_entropy = loss(logits, batch_y) 
+                cross_entropy.backward()
+                
 
                 t.nn.utils.clip_grad_norm_(self.model.parameters(), 20)
                 optimizer.step()
@@ -241,6 +268,8 @@ class DropoutClassifier(object):
                     metric_trajectories['outsample_cross_entropy'].append(out_cross_entropy)
                     metric_trajectories['insample_accuracy'].append(in_accuracy)
                     metric_trajectories['outsample_accuracy'].append(out_accuracy)
+                    metric_trajectories['step'].append(step)
+                    metric_trajectories['epoch'].append(epoch)
 
                 # Update optimizer learning rate
                 if step % self.params['adjust_lr_step'] == 0:
@@ -271,15 +300,38 @@ def main():
     insample_dataloader = get_dataloader(X_train, y_train, batch_size=params['batch_size'])
     outsample_dataloader = get_dataloader(X_val, y_val, batch_size=params['batch_size'])
 
+    DROPOUT = 0.0 # [0.0, 0.20.5, 0.8]
+    params['hidden_dropout_prob'] = DROPOUT
     clf = DropoutClassifier(params)
     clf.fit(insample_dataloader, outsample_dataloader)
 
     # To avoid unnecesary pain, we recommend you to save your classifiers
-    clf.save_weights('./your_results_path/')
-    clf.load_weights('./your_results_path/')
+    clf.save_weights(f'./model_dropout_{DROPOUT}.pth')
+    clf.load_weights(f'./model_dropout_{DROPOUT}.pth')
 
-    # TODO: save trajectories and/or plot trajectories
-
+    # TODO: save trajectories and/or plot trajectories - Done
+    with open(f'./results_dropout_{DROPOUT}.pkl', 'wb') as file:
+        pickle.dump(clf.trajectories, file)
+        
+    plt.figure(0)
+    plt.plot(clf.trajectories['step'], clf.trajectories['insample_cross_entropy'], linestyle='-.', color='b', label='Train Loss')
+    plt.plot(clf.trajectories['step'], clf.trajectories['outsample_cross_entropy'], linestyle='-', color='orange', label='Validation Loss')
+    plt.title('Loss vs Gradient Steps')
+    plt.ylabel('Loss')
+    plt.xlabel('Gradient Step')
+    plt.legend(loc='best')
+    plt.savefig(f'./loss_dropout_{DROPOUT}.png')
+    plt.show()
+    
+    plt.figure(0)
+    plt.plot(clf.trajectories['step'], clf.trajectories['insample_accuracy'], linestyle='-.', color='b', label='Train Accuracy')
+    plt.plot(clf.trajectories['step'], clf.trajectories['outsample_accuracy'], linestyle='-', color='orange', label='Validation Accuracy')
+    plt.title('Accuracy vs Gradient Steps')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Gradient Step')
+    plt.legend(loc='best')
+    plt.savefig(f'./acc_dropout_{DROPOUT}.png')
+    plt.show()
 
 if __name__ == '__main__':
     main()
