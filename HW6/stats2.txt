@@ -1,0 +1,98 @@
+==================================== Fitting LeNet (no pooling) ====================================
+Time elapsed for epoch 1: 19.288185834884644 seconds
+Epoch: 2, Step: 250, In Loss: 1.4377761, Out Loss: 1.4649972, In Acc: 48.090, Out Acc: 46.480
+Time elapsed for epoch 2: 41.7458393573761 seconds
+Epoch: 3, Step: 500, In Loss: 1.1915081, Out Loss: 1.3054963, In Acc: 57.562, Out Acc: 53.420
+Time elapsed for epoch 3: 40.01726937294006 seconds
+Epoch: 4, Step: 750, In Loss: 1.0013697, Out Loss: 1.2177341, In Acc: 64.662, Out Acc: 57.200
+Time elapsed for epoch 4: 39.73046135902405 seconds
+Time elapsed for epoch 5: 11.640416622161865 seconds
+Epoch: 6, Step: 1000, In Loss: 0.7492087, Out Loss: 1.2391875, In Acc: 73.848, Out Acc: 59.460
+Time elapsed for epoch 6: 40.02216958999634 seconds
+Epoch: 7, Step: 1250, In Loss: 0.4801806, Out Loss: 1.2889631, In Acc: 83.330, Out Acc: 61.470
+Time elapsed for epoch 7: 40.66852402687073 seconds
+Epoch: 8, Step: 1500, In Loss: 0.3185778, Out Loss: 1.4141998, In Acc: 89.538, Out Acc: 61.360
+Time elapsed for epoch 8: 39.451595306396484 seconds
+Epoch: 9, Step: 1750, In Loss: 0.2578247, Out Loss: 1.6267356, In Acc: 91.572, Out Acc: 60.610
+Time elapsed for epoch 9: 40.135743856430054 seconds
+Time elapsed for epoch 10: 11.575165033340454 seconds
+Epoch: 11, Step: 2000, In Loss: 0.1673208, Out Loss: 1.9529797, In Acc: 94.424, Out Acc: 60.160
+Time elapsed for epoch 11: 39.39871668815613 seconds
+Epoch: 12, Step: 2250, In Loss: 0.0552316, Out Loss: 2.3149609, In Acc: 98.618, Out Acc: 60.950
+Time elapsed for epoch 12: 41.758368492126465 seconds
+Epoch: 13, Step: 2500, In Loss: 0.0250656, Out Loss: 2.6621421, In Acc: 99.486, Out Acc: 60.850
+Time elapsed for epoch 13: 40.117661476135254 seconds
+Time elapsed for epoch 14: 11.64177918434143 seconds
+Epoch: 15, Step: 2750, In Loss: 0.0125125, Out Loss: 3.0012183, In Acc: 99.854, Out Acc: 60.610
+Time elapsed for epoch 15: 39.8807315826416 seconds
+Epoch: 16, Step: 3000, In Loss: 0.0055335, Out Loss: 3.2940500, In Acc: 99.968, Out Acc: 60.860
+Time elapsed for epoch 16: 39.54280209541321 seconds
+
+=================================== Finished Train ===================================
+Total time elapsed for training: 536.6190464496613 seconds
+
+==================================== Fitting LeNet (avg pooling) ====================================
+Time elapsed for epoch 1: 11.993587493896484 seconds
+Epoch: 2, Step: 250, In Loss: 1.5353886, Out Loss: 1.5317035, In Acc: 44.024, Out Acc: 44.250
+Time elapsed for epoch 2: 39.79818630218506 seconds
+Epoch: 3, Step: 500, In Loss: 1.3423512, Out Loss: 1.3710909, In Acc: 52.112, Out Acc: 50.760
+Time elapsed for epoch 3: 39.322638750076294 seconds
+Epoch: 4, Step: 750, In Loss: 1.2359664, Out Loss: 1.3046948, In Acc: 55.786, Out Acc: 53.180
+Time elapsed for epoch 4: 39.13508415222168 seconds
+Time elapsed for epoch 5: 11.327827215194702 seconds
+Epoch: 6, Step: 1000, In Loss: 1.1868329, Out Loss: 1.2732497, In Acc: 57.606, Out Acc: 54.570
+Time elapsed for epoch 6: 38.860105991363525 seconds
+Epoch: 7, Step: 1250, In Loss: 1.0298823, Out Loss: 1.1793419, In Acc: 63.574, Out Acc: 57.350
+Time elapsed for epoch 7: 41.00061392784119 seconds
+Epoch: 8, Step: 1500, In Loss: 0.9645973, Out Loss: 1.1431515, In Acc: 65.848, Out Acc: 59.680
+Time elapsed for epoch 8: 39.58172631263733 seconds
+Epoch: 9, Step: 1750, In Loss: 0.9125923, Out Loss: 1.1314809, In Acc: 67.566, Out Acc: 60.700
+Time elapsed for epoch 9: 40.32560324668884 seconds
+Time elapsed for epoch 10: 11.77369999885559 seconds
+Epoch: 11, Step: 2000, In Loss: 0.8748230, Out Loss: 1.1266155, In Acc: 68.872, Out Acc: 60.570
+Time elapsed for epoch 11: 40.30024313926697 seconds
+Epoch: 12, Step: 2250, In Loss: 0.7835797, Out Loss: 1.1125969, In Acc: 72.406, Out Acc: 62.210
+Time elapsed for epoch 12: 41.41454291343689 seconds
+Epoch: 13, Step: 2500, In Loss: 0.7580142, Out Loss: 1.1155605, In Acc: 73.478, Out Acc: 62.550
+Time elapsed for epoch 13: 39.804065465927124 seconds
+Time elapsed for epoch 14: 11.502695083618164 seconds
+Epoch: 15, Step: 2750, In Loss: 0.7491474, Out Loss: 1.1406204, In Acc: 73.358, Out Acc: 62.070
+Time elapsed for epoch 15: 39.097256898880005 seconds
+Epoch: 16, Step: 3000, In Loss: 0.6865497, Out Loss: 1.1584316, In Acc: 75.912, Out Acc: 62.420
+Time elapsed for epoch 16: 38.91428184509277 seconds
+
+=================================== Finished Train ===================================
+Total time elapsed for training: 524.1575632095337 seconds
+
+==================================== Fitting LeNet (max pooling) ====================================
+Time elapsed for epoch 1: 12.710830688476562 seconds
+Epoch: 2, Step: 250, In Loss: 1.4580341, Out Loss: 1.4607143, In Acc: 46.416, Out Acc: 46.090
+Time elapsed for epoch 2: 43.427014112472534 seconds
+Epoch: 3, Step: 500, In Loss: 1.2557029, Out Loss: 1.2973628, In Acc: 55.262, Out Acc: 53.570
+Time elapsed for epoch 3: 40.04331851005554 seconds
+Epoch: 4, Step: 750, In Loss: 1.1006437, Out Loss: 1.1948689, In Acc: 60.912, Out Acc: 56.750
+Time elapsed for epoch 4: 39.13952326774597 seconds
+Time elapsed for epoch 5: 13.013514757156372 seconds
+Epoch: 6, Step: 1000, In Loss: 1.0665446, Out Loss: 1.1893795, In Acc: 61.980, Out Acc: 57.840
+Time elapsed for epoch 6: 41.15686106681824 seconds
+Epoch: 7, Step: 1250, In Loss: 0.9037228, Out Loss: 1.0895525, In Acc: 68.080, Out Acc: 61.360
+Time elapsed for epoch 7: 40.15416622161865 seconds
+Epoch: 8, Step: 1500, In Loss: 0.8459638, Out Loss: 1.0821561, In Acc: 70.144, Out Acc: 62.680
+Time elapsed for epoch 8: 39.87320566177368 seconds
+Epoch: 9, Step: 1750, In Loss: 0.8154261, Out Loss: 1.0810311, In Acc: 71.284, Out Acc: 62.800
+Time elapsed for epoch 9: 38.713956117630005 seconds
+Time elapsed for epoch 10: 12.736377716064453 seconds
+Epoch: 11, Step: 2000, In Loss: 0.7596159, Out Loss: 1.0754537, In Acc: 72.974, Out Acc: 63.050
+Time elapsed for epoch 11: 41.311155796051025 seconds
+Epoch: 12, Step: 2250, In Loss: 0.6508305, Out Loss: 1.0692455, In Acc: 77.412, Out Acc: 64.720
+Time elapsed for epoch 12: 39.55270171165466 seconds
+Epoch: 13, Step: 2500, In Loss: 0.6286791, Out Loss: 1.0774264, In Acc: 78.194, Out Acc: 63.820
+Time elapsed for epoch 13: 37.715731382369995 seconds
+Time elapsed for epoch 14: 12.407377243041992 seconds
+Epoch: 15, Step: 2750, In Loss: 0.6132408, Out Loss: 1.1015468, In Acc: 78.554, Out Acc: 64.420
+Time elapsed for epoch 15: 39.452831506729126 seconds
+Epoch: 16, Step: 3000, In Loss: 0.5983664, Out Loss: 1.1703890, In Acc: 79.052, Out Acc: 63.330
+Time elapsed for epoch 16: 39.09072256088257 seconds
+
+=================================== Finished Train ===================================
+Total time elapsed for training: 530.5077974796295 seconds
