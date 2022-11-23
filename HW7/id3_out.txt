@@ -1,0 +1,12 @@
+Train Accuracy for max-depth 1: 0.7432432432432433
+Val Accuracy for max-depth 1: 0.6846846846846847
+Train Accuracy for max-depth 3: 0.8851351351351351
+Val Accuracy for max-depth 3: 0.6981981981981983
+Train Accuracy for max-depth 5: 0.9774774774774775
+Val Accuracy for max-depth 5: 0.6846846846846847
+Train Accuracy for max-depth 7: 0.990990990990991
+Val Accuracy for max-depth 7: 0.6891891891891891
+Train Accuracy for max-depth 9: 0.990990990990991
+Val Accuracy for max-depth 9: 0.6891891891891891
+Final Train Accuracy (after training on all data) with max-depth 3: 0.8558558558558559
+Final Test Accuracy (after training on all data) with max-depth 3: 0.6727272727272727
