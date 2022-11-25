@@ -6,6 +6,7 @@ import os
 import matplotlib.pyplot as plt
 from collections import Counter
 from sklearn.model_selection import KFold
+from itertools import takewhile
 
 class Node:
     def __init__(self, depth, node_type='normal', label=None, feature=None, class_dict=None):
@@ -25,15 +26,17 @@ class DecisionTree:
     def __init__(self, X, Y, max_depth, class_dict):
         self.max_depth = max_depth
         self.class_dict = class_dict
-        self.features = list(X.columns)
         self.root = self.build(X, Y, 0)
+        self.features = list(X.columns)
     
     def build(self, X, Y, depth):
         node = Node(depth, 'root' if depth == 0 else 'normal')
         counter = Counter(Y)
         if counter.most_common(1)[0][1] == len(Y) or depth == self.max_depth:
             node.node_type = 'leaf'
-            node.label = counter.most_common(1)[0][0]
+            all_most_common = list(takewhile(lambda val: val[1] == counter.most_common(1)[0][1], counter.most_common()))
+            all_most_common.sort()
+            node.label = all_most_common[0][0]
             return node
         
         split_feature = self.get_best_feature_to_split_on(X, Y)
@@ -41,7 +44,7 @@ class DecisionTree:
         
         for value in self.class_dict[split_feature]:
             eff_idx = X[split_feature] == value
-            X_eff, Y_eff = X[eff_idx], Y[eff_idx]
+            X_eff, Y_eff = X[eff_idx].loc[:, X.columns != split_feature], Y[eff_idx]
             if len(Y_eff) == 0:
                 node.children[value] = Node(
                     depth+1, 'leaf', counter.most_common(1)[0][0]
@@ -57,11 +60,12 @@ class DecisionTree:
         return 1 - np.sum(list(map(lambda x: (x/sum_counts)**2, y_counts)))
 
     def get_best_feature_to_split_on(self, X, Y):
+        features = list(X.columns)
         best_feature = None
         best_gini_gain = -np.inf
         
         gini_gain_base = self.gini_index([info[1] for info in Counter(Y).most_common()])
-        for feature in self.features:
+        for feature in features:
             gini_gain = gini_gain_base
             for value in self.class_dict[feature]:
                 eff_idx = X[feature] == value
@@ -82,20 +86,19 @@ class DecisionTree:
             for feature in self.features:
                 x_features.update({feature: x[feature]})
         
-            Y_hat.append(self.predict_obs(x_features))
+            Y_hat.append(self.predict_obs(x_features, self.root))
         
         return Y_hat
     
-    def predict_obs(self, x):
-        node = self.root
-        while True:
-            if node.node_type == 'leaf':
-                return node.label
-            feature_value = x[node.feature_to_split_on]
-            node = node.children[feature_value]
+    def predict_obs(self, x, node):
+        if node.node_type == 'leaf':
+            return node.label
+    
+        feature_value = x[node.feature_to_split_on]
+        return self.predict_obs(x, node.children[feature_value])
     
     def accuracy(self, Y, Y_hat):
-        return np.mean(np.array(Y) == np.array(Y_hat))
+        return np.mean(np.array(Y, dtype=np.bool8) == np.array(Y_hat, dtype=np.bool8))
 
 KFOLD = True
 TEST = True
@@ -131,16 +134,16 @@ if __name__ == "__main__":
         train_accuracies, val_accuracies = [], []
         for max_depth in max_depths:
             kfold_train_acc, kfold_val_acc = [], []
-            kf = KFold(n_splits = 3, shuffle=True, random_state=42)
+            kf = KFold(n_splits = 3, shuffle=True, random_state=2022)
             for train_index, val_index in kf.split(train):   
-                X_train, Y_train = train.loc[train_index, test.columns != 'target'], train.loc[train_index, 'target']
-                X_val, Y_val = train.loc[val_index, test.columns != 'target'], train.loc[val_index, 'target']
+                X_train, Y_train = train.loc[train_index, train.columns != 'target'], train.loc[train_index, 'target']
+                X_val, Y_val = train.loc[val_index, train.columns != 'target'], train.loc[val_index, 'target']
                 dt = DecisionTree(X_train, Y_train, max_depth, class_dict)
                 Y_train_hat = dt.predict(X_train)
                 kfold_train_acc.append(dt.accuracy(Y_train, Y_train_hat))
                 Y_val_hat = dt.predict(X_val)
                 kfold_val_acc.append(dt.accuracy(Y_val, Y_val_hat))
-            
+
             train_accuracies.append(np.mean(kfold_train_acc))
             val_accuracies.append(np.mean(kfold_val_acc))
             print(f'Train Accuracy for max-depth {max_depth}:', train_accuracies[-1])
@@ -156,18 +159,21 @@ if __name__ == "__main__":
         plt.ylabel('Accuracy')
         plt.xlabel('Max Depth')
         plt.legend(loc='best')
-        plt.savefig(f'./plots/dt_acc.png')
+        plt.savefig(f'./plots/dt_acc_2.png')
         plt.show()
 
     if TEST:
         MAX_DEPTH = 3 if not KFOLD else best_max_depth
-        X_train, Y_train = train.loc[:, test.columns != 'target'], train['target']
+        X_train, Y_train = train.loc[:, train.columns != 'target'], train['target']
         X_test, Y_test = test.loc[:, test.columns != 'target'], test['target']
+
         dt = DecisionTree(X_train, Y_train, MAX_DEPTH, class_dict)
         Y_train_hat = dt.predict(X_train)
         Y_test_hat = dt.predict(X_test)
+
         print(f'Final Train Accuracy (after training on all data) with max-depth {MAX_DEPTH}:', dt.accuracy(Y_train, Y_train_hat))
         print(f'Final Test Accuracy (after training on all data) with max-depth {MAX_DEPTH}:', dt.accuracy(Y_test, Y_test_hat))
+
         
     
         

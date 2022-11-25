@@ -2,11 +2,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA, KernelPCA
+from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from itertools import cycle, islice
-from sklearn.cluster import AgglomerativeClustering
 
 def pts_distance(x, y, mode='euclidean'):
     if mode.lower() == 'euclidean':
@@ -20,25 +18,25 @@ def pts_distance(x, y, mode='euclidean'):
 
 def cluster_distance(X, Y, linkage='single', dist=None, dist_betw_center=None):
     # If dist is not None, we use indices from X and Y to get the distance from dist matrix
+    # dist_betw_center is needed for using Ward linkage
     if linkage.lower() in ['single', 'min']:
         return np.min([pts_distance(x, y) if dist is None else dist[x][y] for x in X for y in Y])
     elif linkage.lower() in ['max', 'complete']:
         return np.max([pts_distance(x, y) if dist is None else dist[x][y] for x in X for y in Y])
     elif linkage.lower() == 'ward':
-        return len(X)*len(Y)/(len(X)+len(Y)) * dist_betw_center
+        return (len(X)*len(Y)/(len(X)+len(Y))) * dist_betw_center
     else: # 'average'
         return np.mean([pts_distance(x, y) if dist is None else dist[x][y] for x in X for y in Y])
         
         
 class LinkageClustering:
     def __init__(self, n_clusters, cluster_dist_linkage='single', pts_dist_mode='euclidean'):
+        # assert cluster_dist_linkage != 'ward' or pts_dist_mode == 'euclidean'
         self.n_clusters = n_clusters
         self.cluster_dist_linkage = cluster_dist_linkage
         self.pts_dist_mode = pts_dist_mode
-        self.distances_ = []
-        self.children_ = []
             
-    def fit(self, X, children):
+    def fit(self, X):
         if isinstance(X, pd.DataFrame):
             self.X = X.to_numpy()
         else:
@@ -49,6 +47,9 @@ class LinkageClustering:
         self.clusters = {
             id: [id] for id in range(len(X))
         }
+        
+        self.distances_ = []
+        self.children_ = []
         
         self.cluster_distances = {}
         for id_X, clusterX in self.clusters.items():
@@ -69,16 +70,8 @@ class LinkageClustering:
                     clusterX, clusterY, self.cluster_dist_linkage, self.pts_distances, dist_betw_center
                 )
         
-        iter = 0
         while len(self.clusters) > self.n_clusters:
-            id_X, id_Y = self.find_closest_clusters(children[iter])
-            iter += 1
-            
-            if len(self.clusters) < 10:
-                print(len(self.cluster_distances))
-                print(self.clusters)
-                print()
-            
+            id_X, id_Y = self.find_closest_clusters()
             self.merge_clusters(id_X, id_Y)
              
         self.re_index_clusters()
@@ -90,29 +83,14 @@ class LinkageClustering:
             for i in range(len(self.X))
         ]
     
-    def find_closest_clusters_2(self):
-        best_cluster_pair_idx = (-1, -1)
-        best_distance = np.inf
-        
-        for i, clusterX in self.clusters.items():
-            for j, clusterY in self.clusters.items():
-                if i >= j:
-                    continue
-                distance = cluster_distance(clusterX, clusterY, self.cluster_dist_linkage, self.pts_distances)
-                if distance < best_distance:
-                    best_distance = distance
-                    best_cluster_pair_idx = (i, j)
-        
-        return best_cluster_pair_idx
-    
-    def find_closest_clusters(self, to_find):
+    def find_closest_clusters(self):
         best_cluster_pair_idx = (-1, -1)
         best_distance = np.inf
         for i in self.clusters:
             for j in self.clusters:
                 if i >= j:
                     continue
-                if self.cluster_distances[i][j] < best_distance+EPS:
+                if self.cluster_distances[i][j] < best_distance:
                     best_distance = self.cluster_distances[i][j]
                     best_cluster_pair_idx = (i, j)
         
@@ -120,7 +98,6 @@ class LinkageClustering:
         self.children_.append(list(best_cluster_pair_idx))
         
         return best_cluster_pair_idx
-    
     
     def merge_clusters(self, id_X, id_Y):
         for ind in self.clusters:
@@ -137,7 +114,7 @@ class LinkageClustering:
                 )
             elif self.cluster_dist_linkage == 'ward':
                 m_X = [self.X[i] for i in self.clusters[id_X]]
-                m_X.extend([[self.X[i] for i in self.clusters[id_Y]]])
+                m_X.extend([self.X[i] for i in self.clusters[id_Y]])
                 m_X = np.mean(m_X, axis=0)
                 m_Y = np.mean([self.X[i] for i in self.clusters[ind]], axis=0)
                 dist_betw_center = pts_distance(m_X, m_Y, self.pts_dist_mode)
@@ -145,16 +122,14 @@ class LinkageClustering:
                 n2 = len(self.clusters[ind])
                 self.cluster_distances[id_X][ind] = self.cluster_distances[ind][id_X] = (n1*n2/(n1+n2)) *\
                     dist_betw_center
-            else:
+            else: # Average Linkage
                 nr1 = len(self.clusters[id_X])*len(self.clusters[ind])
                 nr2 = len(self.clusters[id_Y])*len(self.clusters[ind])
                 dr = nr1+nr2
                 self.cluster_distances[id_X][ind] = self.cluster_distances[ind][id_X] = \
-                    (nr1/dr)*self.cluster_distances[id_X][ind] + (nr2/dr)*self.cluster_distances[id_Y][ind]
-            
+                    (nr1/dr)*self.cluster_distances[id_X][ind] + (nr2/dr)*self.cluster_distances[id_Y][ind]      
 
             self.cluster_distances[ind].pop(id_Y, None)
-        
         
         self.cluster_distances[id_X].pop(id_Y, None)    
         self.cluster_distances.pop(id_Y, None)
@@ -181,23 +156,15 @@ class LinkageClustering:
             for X_idx in self.clusters[cluster_id]:
                 self.cluster_labels[X_idx] = cluster_id
     
-    def verify_cluster_distances(self):
-        tmp_cluster_dist = {
-            id_X: {
-                id_Y: cluster_distance(clusterX, clusterY, self.cluster_dist_linkage, self.pts_distances)
-                for id_Y, clusterY in self.clusters.items() if id_Y != id_X
-            } for id_X, clusterX in self.clusters.items()
-        } 
-        print(tmp_cluster_dist)
-        print(self.cluster_distances)
 
-def scatter_plot(X, y=None, plot_name='viz', fig_idx=0):
+def scatter_plot(X, y=None, fig_idx=0, merge_outliers=False, tsne=False):
     if y is None:
         y = [0 for _ in range(len(X))]
+    if merge_outliers:
+        y = [0 if yi == 0 else 1 for yi in y]
     
-    pca = PCA(n_components=2)
+    pca = PCA(n_components=2) if not tsne else TSNE(n_components=2)
     X_red = pca.fit_transform(X)
-    # print(np.cumsum(pca.explained_variance_ratio_[:30]))
     
     plt.figure(fig_idx)
     colors = np.array(
@@ -205,27 +172,42 @@ def scatter_plot(X, y=None, plot_name='viz', fig_idx=0):
             islice(
                 cycle(
                     [
+                        "olive",
+                        "orange",
+                        "blue",
+                        "red",
+                        "brown",
+                        "mediumseagreen",
                         "#377eb8",
-                        "#ff7f00",
-                        "#4daf4a",
-                        "#f781bf",
-                        "#a65628",
-                        "#984ea3",
-                        "#999999",
-                        "#e41a1c",
-                        "#dede00",
+                        "pink",
+                        "m",
+                        "black"
                     ]
                 ),
                 int(max(y) + 1),
             )
         )
     )
-    plt.scatter(X_red[:, 0], X_red[:, 1], s=10, color=colors[y])
+    plt.scatter(X_red[:, 0], X_red[:, 1], s=12, color=colors[y])
     plt.xlabel('First Dimension')
     plt.ylabel('Second Dimension')
     plt.title('Visualization of datapoints (dimension reduced using PCA)')
-    plt.savefig(f'./plots/{plot_name}_{fig_idx}.png')
     plt.show()
+    plt.close()
+
+def pca_plot(variances, threshold=0.95, fig_idx=0):
+    plt.figure(fig_idx)
+    npc = np.argmax(variances >= threshold)+1
+    ax = plt.subplot(1, 1, 1)
+    ax.set_xlabel('number of components (log scale)')
+    ax.set_ylabel('cumulative % explained variance')
+    ax.set_title('PCA')
+    ax.semilogx(list(range(1,variances.shape[0]+1)), variances*100)
+    ax.axhline(variances[npc-1]*100, c='red', linestyle='dashed', label=f'cum-var {variances[npc-1]*100:.2f}% @ {npc} PC')
+    plt.legend()
+    plt.show()
+    plt.close()
+
 
 EPS = 1e-8
 if __name__ == "__main__":
@@ -241,32 +223,29 @@ if __name__ == "__main__":
     for column in train.columns:
         min_val = min(min_val, train[column].min())
         max_val = max(max_val, train[column].max())
-    print(f'Min: {min_val} | Max: {max_val}')
+    print(f'Min of column values: {min_val} | Max of column values: {max_val}')
     
-    train = train.sample(frac=0.5, random_state=42).reset_index(drop=True)
-    print(len(train))
+    # Stats about vector magnitudes
+    X = train.to_numpy()
+    mag = np.linalg.norm(X, axis=1)
+    print(f'Min of point vector magnitudes: {np.min(mag):.3f}')
+    print(f'Max of point vector magnitudes: {np.max(mag):.3f}')
+    print(f'Mean of point vector magnitudes: {np.mean(mag):.3f}')
+    print(f'Variance of point vector magnitudes: {np.var(mag):.3f}')
     
-    # X = StandardScaler().fit_transform(train)
-    # scatter_plot(train)
-    
-    # labels = pd.read_csv('Q2_data/labels.csv', header=None)
-    # labels[0] = labels[0].astype(int)
-    
-    ac = AgglomerativeClustering(n_clusters=5, affinity='euclidean', linkage='complete', compute_distances=True)
-    labels = ac.fit_predict(train)
-    lc = LinkageClustering(5, 'max', 'euclidean')
-    lc.fit(train, ac.children_)
-    # lc.verify_cluster_distances()
-    scatter_plot(train, labels, fig_idx=1)
-    scatter_plot(train, lc.cluster_labels)
-    print(lc.distances_)
-    print(ac.distances_)
-    print()
-    print(lc.children_)
-    print(ac.children_)
-    
-    
-    
-    
-        
+    # To plot PCA
+    dim_redn = PCA()
+    X = dim_redn.fit_transform(train)
+    expl_var = np.cumsum(dim_redn.explained_variance_ratio_)
+    pca_plot(expl_var, fig_idx=0)
+
+    # To plot true labels
+    true_labels = pd.read_csv('Q2_data/labels.csv', header=None)
+    true_labels[0] = true_labels[0].astype(int)
+    scatter_plot(train, true_labels[0], fig_idx=1)
+
+    # Scatter Plot of Clustering Results
+    lc = LinkageClustering(2, 'complete', 'cosine')
+    lc.fit(train)
+    scatter_plot(train, lc.cluster_labels, fig_idx=2)
     

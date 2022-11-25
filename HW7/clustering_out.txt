@@ -4,4 +4,10 @@
  0.77093818 0.7790831  0.78632849 0.79310106 0.7996569  0.80599959
  0.81210957 0.81757875 0.82303219 0.82810071 0.83302914 0.83762147] - PCA out Initial
 
-
+Total number of datapoints: 1056
+256 out of 784 columns dropped due to their zero contribution to distinguishing datapoints
+Min of column values: 0.0 | Max of column values: 1.0
+Min of point vector magnitudes: 4.140
+Max of point vector magnitudes: 13.174
+Mean of point vector magnitudes: 8.042
+Variance of point vector magnitudes: 2.395
